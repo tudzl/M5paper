@@ -66,6 +66,7 @@ public:
    void Show();
 
    void ShowM5PaperInfo();
+   void ShowM5Paper_SHT30_Info();
 };
 
 /* Draw a circle with optional start and end point */
@@ -447,6 +448,23 @@ void WeatherDisplay::ShowM5PaperInfo()
 {
    Serial.println("WeatherDisplay::ShowM5PaperInfo");
 
+   canvas.createCanvas(245, 251);
+
+   canvas.setTextSize(2);
+   canvas.setTextColor(WHITE, BLACK);
+   canvas.setTextDatum(TL_DATUM);
+
+   canvas.drawRect(0, 0, 245, 251, M5EPD_Canvas::G15);
+   DrawM5PaperInfo(0, 0, 245, 251);
+   
+   canvas.pushCanvas(697, 35, UPDATE_MODE_GC16);
+   delay(1000);
+}
+//by Zell , to call with total refresh mode
+void WeatherDisplay::ShowM5Paper_SHT30_Info()
+{
+   Serial.println("WeatherDisplay::ShowM5PaperInfo");
+   canvas.deleteCanvas();
    canvas.createCanvas(245, 251);
 
    canvas.setTextSize(2);

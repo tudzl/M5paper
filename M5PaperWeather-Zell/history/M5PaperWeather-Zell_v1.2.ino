@@ -1,15 +1,9 @@
-/*
-Sketch uses 1098313 bytes (16%) of program storage space. Maximum is 6553600 bytes.
-Global variables use 42096 bytes (0%) of dynamic memory, leaving 4479888 bytes for local variables. Maximum is 4521984 bytes.
-
-*/
+//version 1.1
+//data 20.06.2022
+//modified by Zell
 #include <M5EPD.h> 
 #include "SPIFFS.h"
 #define FORMAT_SPIFFS_IF_FAILED true
-#include <esp_wifi.h>
-#include <esp_bt.h>
-#include <WiFiMulti.h>
-WiFiMulti wifiMulti;
 #include "configuration.h" 
 
 #include "credentials.h"
@@ -21,27 +15,19 @@ M5EPD_Canvas canvas(&M5.EPD); // setup for the Display
 int Modus;
 bool new_mode= false;
 int a=0;
+bool app_launch_sellect = false;
 
 // for the Touchscreen
 int point[2][2];
-bool app_launch_sellect = false;
-
-
-// For the Clock
-rtc_time_t RTCtime;
-rtc_date_t RTCDate;
-char timeStrbuff[64];
-
-// for NTP to RTC time
-time_t t;
-struct tm *tm;
 
 
 void setup() {
   M5.begin(true,false,true,false,true); //Touchscreen,SDreader, Serial,BatteryADC,I2C
-  Serial.println("M5paper App Launch program V1.1 Angeschaltet");
+  //M5.begin(true,true,true,false,true);
+ // M5.enableEXTPower();  //enable external power. 启用拓展端口电源
+  Serial.println("M5Paper Angeschaltet");
   M5.EPD.SetRotation(90); // for the Screen to be upright
-  //M5.EPD.Clear(true);  //if you want a Full refresh after every start
+  M5.EPD.Clear(true);  //if you want a Full refresh after every start
   M5.update();//added by Zell
 
   if( M5.BtnL.wasPressed()){
@@ -56,8 +42,7 @@ void setup() {
     app_launch_sellect = true;
     Serial.println("BtnP launch APP sellect");
   }
-  wifiMulti.addAP(ssid, password);
-  //wifiMulti.addAP(ssid1, password1);
+
   if(!SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED))
     {
       Serial.println("SPIFFS Mount Failed -> Formatting SPIFFS");
@@ -73,15 +58,13 @@ void setup() {
 }
 
 void loop() {
-  
 if( M5.BtnP.isPressed())// if button P (Power) was pressed to boot the device manualy, the modus choosing mode is activated
-    {//seems not entered!  
+    {  
       M5.update();
       selector();
     }  
 if( app_launch_sellect){
     M5.update();
-    Serial.println("#>:Entering APP sellection function");
     selector();
     }
 if (new_mode == true)

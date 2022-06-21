@@ -14,7 +14,9 @@
 #include "Weather.h"
 
 // Refresh the M5Paper info more often.
-#define REFRESH_PARTLY 1
+//#define REFRESH_PARTLY 1
+#define Refresh_min_interval 5 // sleep-wakeup/update cycle
+bool USB_Plug_in = false;
 
 MyData         myData;            // The collection of the global data
 WeatherDisplay myDisplay(myData); // The global display helper class
@@ -38,6 +40,13 @@ void mode1()
       Serial.println("#>:Collecting sensor data...");   
       M5.BatteryADCBegin();//need this to init ADC before calling ADC sampling function 
       GetBatteryValues(myData);
+      
+      if(myData.batteryCapacity = 1){
+         //when usb plug-in, vbat=3.3, soc=1%? why
+         USB_Plug_in = true;
+      }
+     
+         
       GetSHT30Values(myData);
       GetMoonValues(myData);
       if (myData.weather.Get()) {
@@ -47,7 +56,20 @@ void mode1()
       myDisplay.Show();
       StopWiFi();
    }
-   ShutdownEPD(60 * 60); // every 1 hour   wakeup!
+   delay(1000);
+   if(USB_Plug_in){
+    delay(1000*Refresh_min_interval);
+    Serial.println("#>- update SHT30 data");
+    GetSHT30Values(myData);
+    myDisplay.ShowM5Paper_SHT30_Info();
+    //update in area (697, 35, 245, 251)
+    Serial.println("#>:esp_deep_sleep_start");
+    esp_deep_sleep_start();
+   }
+   Serial.print("#>: Shutdown Now... will wakeup every ? min:");
+   Serial.println(Refresh_min_interval);
+   ShutdownEPD(60 * Refresh_min_interval); // every  5 min   wakeup!
+   //ShutdownEPD(60 * 60); // every 1 hour   wakeup!
 #else 
    myData.LoadNVS();
    if (myData.nvsCounter == 1) {
@@ -75,8 +97,7 @@ void mode1()
    myData.nvsCounter++;
    myData.SaveNVS();
    ShutdownEPD(600); //RTC  10 minute  wakeup!
-   //if(USB_Plug_in)
-    esp_deep_sleep_start();
+
 /* 
  *  Shutdown the M5Paper 
  *  NOTE: the M5Paper could not shutdown while on usb connection.
