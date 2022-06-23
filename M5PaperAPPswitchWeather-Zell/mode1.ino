@@ -130,15 +130,15 @@ void  Cycle_show_M5PaperInfo()
 
         if(myData.batteryVolt=3.3)
         cycle_EN_USB_DC_mode = true;
-        Serial.println("cycle mode running when USB powered!");
+        Serial.println("Fast cycle mode running when USB powered!");
     }
-    else{
-      //if(vol!=3.3)
-        cycle_EN_USB_DC_mode = false;
-        Serial.println("cycle mode exit...");
+    if(myData.Akku_SOC<75){
+           cycle_EN_USB_DC_mode = false;
+           Serial.println("#>: Low Akku (<75%), fast cycle mode exit now...");
     }
-    delay(1000*60);
-    Serial.printf("#>:Battery Vol: %3.2f\r\n",myData.batteryVolt);
+    delay(1000*30);
+    //Serial.printf("#>:Battery Vol: %3.2f V\r\n",myData.batteryVolt);
+    Serial.printf("#>:Battery Raw: %3.2f V\r\n",myData.batteryVolt_raw);
     Serial.printf("APP running cycle cnt:%d\r\n",cycle_cnt);
   }
    

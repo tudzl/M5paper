@@ -35,6 +35,8 @@ public:
 
    int     wifiRSSI;         //!< The wifi signal strength
    float   batteryVolt;      //!< The current battery voltage
+   float   batteryVolt_raw;  
+   float   Akku_SOC; //SOC in 0% to 100%
    int     batteryCapacity;  //!< The current battery capacity
    int     sht30Temperatur;  //!< SHT30 temperature
    int     sht30Humidity;    //!< SHT30 humidity
@@ -48,7 +50,9 @@ public:
    MyData()
       : wifiRSSI(0)
       , batteryVolt(0.0)
+      , batteryVolt_raw(0.0)
       , batteryCapacity(0)
+      , Akku_SOC(0)
       , sht30Temperatur(0)
       , sht30Humidity(0)
       , moonRise(0)
@@ -66,6 +70,7 @@ public:
       Serial.println("WifiRSSI: "        + String(wifiRSSI));
       Serial.println("BatteryVolt: "     + String(batteryVolt));
       Serial.println("BatteryCapacity: " + String(batteryCapacity));
+      Serial.println("BatterySOC: " + String(Akku_SOC));
       Serial.println("Sht30Temperatur: " + String(sht30Temperatur));
       Serial.println("Sht30Humidity: "   + String(sht30Humidity));
       Serial.println("MoonRise: "        + getDateTimeString(moonRise));
@@ -76,6 +81,8 @@ public:
       Serial.println("Winddir: "         + String(weather.winddir));
       Serial.println("Windspeed: "       + String(weather.windspeed));
       Serial.println("ForcastAP: "       + String(weather.AverageAP));
+      Serial.println("ForcastHu: "       + String(weather.AverageHu)+"%");
+      Serial.println("ForcastTemp.Max: " + String(weather.AverageTm)+"degree");
    }
 
    /* Load the NVS data from the non volatile memory */

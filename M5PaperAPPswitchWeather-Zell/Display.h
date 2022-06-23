@@ -100,7 +100,8 @@ void WeatherDisplay::DrawBattery(int x, int y)
    canvas.drawRect(x + 40, y + 3, 4, 10, M5EPD_Canvas::G15);
    for (int i = x; i < x + 40; i++) {
       canvas.drawLine(i, y, i, y + 15, M5EPD_Canvas::G15);
-      if ((i - x) * 100.0 / 40.0 > myData.batteryCapacity) {
+      if ((i - x) * 100.0 / 40.0 > myData.Akku_SOC) {
+      //if ((i - x) * 100.0 / 40.0 > myData.batteryCapacity) {//ori bugs
          break;
       }
    }
@@ -113,7 +114,7 @@ void WeatherDisplay::DrawHead()
    canvas.drawCentreString(CITY_NAME, maxX / 2, 10, 1);
    canvas.drawString(WifiGetRssiAsQuality(myData.wifiRSSI) + "%", maxX - 200, 10);
    DrawRSSI(maxX - 155, 25);
-   canvas.drawString(String(myData.batteryCapacity) + "%", maxX - 110, 10);
+   canvas.drawString(String((int)myData.Akku_SOC) + "%", maxX - 110, 10);
    DrawBattery(maxX - 65, 10);
 }
 
@@ -433,12 +434,19 @@ void WeatherDisplay::Show()
    }
 
    canvas.drawRect(15, 408, maxX - 30, 122, M5EPD_Canvas::G15);
-   DrawGraph( 15, 408, 232, 122, "Temperature (C)", 0, 7, -10,   40, myData.weather.forecastMaxTemp);
-   DrawGraph( 15, 408, 232, 122, "Temperature (C)", 0, 7, -10,   40, myData.weather.forecastMinTemp);
-   DrawGraph(247, 408, 232, 122, "Rain (mm)",       0, 7,   0,   myData.weather.maxRain, myData.weather.forecastRain);
-   DrawGraph(479, 408, 232, 122, "Humidity (%)",    0, 7,   0,  100, myData.weather.forecastHumidity);
    memset(title_payload, 0, sizeof(title_payload));
-   sprintf(title_payload, "AP(%4.1fcy hpa)",myData.weather.AverageAP); //bugs!
+   sprintf(title_payload, "Temp. (%3.1f C)",myData.weather.AverageTm); //
+   DrawGraph( 15, 408, 232, 122, title_payload, 0, 7, -10,   40, myData.weather.forecastMaxTemp);
+   //DrawGraph( 15, 408, 232, 122, "Temperature (C)", 0, 7, -10,   40, myData.weather.forecastMaxTemp);
+   DrawGraph( 15, 408, 232, 122, title_payload, 0, 7, -10,   40, myData.weather.forecastMinTemp);
+   DrawGraph(247, 408, 232, 122, "Rain (mm)",       0, 7,   0,   myData.weather.maxRain, myData.weather.forecastRain);
+   memset(title_payload, 0, sizeof(title_payload));
+   sprintf(title_payload, "Humidity (%2.0f",myData.weather.AverageHu); //
+   strcat(title_payload, "%)");
+   //DrawGraph(479, 408, 232, 122, "Humidity (%)",    0, 7,   0,  100, myData.weather.forecastHumidity);
+   DrawGraph(479, 408, 232, 122, title_payload,    0, 7,   0,  100, myData.weather.forecastHumidity);
+   memset(title_payload, 0, sizeof(title_payload));
+   sprintf(title_payload, "AP(%4.1f hpa)",myData.weather.AverageAP); //bugs with %d
    // strcat(MQTT_payload, ",To=");
    //   dtostrf(T_MLX_obj, 3, 2, msg);
    //title_payload=myData.weather.AverageAP;
