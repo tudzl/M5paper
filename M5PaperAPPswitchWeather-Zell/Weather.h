@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2021 SFini
+   Copyright (C) 2021 SFini, modified by Zell
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -55,6 +55,8 @@ public:
    float  forecastHumidity[MAX_FORECAST];  //!< humidity of the dayly forecast
    float  forecastPressure[MAX_FORECAST];  //!< air pressure
    float  AverageAP; //average forcast air pressure
+   float  AverageHu;//average forcast Humidity
+   float  AverageTm;//average forecastMaxTemp
    
 protected:
    /* Convert UTC time to local time */
@@ -136,11 +138,15 @@ protected:
             forecastHumidity[i] = dayly_list[i]["humidity"].as<float>();
             forecastPressure[i] = dayly_list[i]["pressure"].as<float>();
             AverageAP+=forecastPressure[i] ;
+            AverageHu+=forecastHumidity[i] ;
+            AverageTm+=forecastMaxTemp[i] ;
             if (forecastRain[i] > maxRain) {
                maxRain = forecastRain[i];
             }
          }
       }
+      AverageTm = AverageTm/MAX_FORECAST;
+      AverageHu = AverageHu/MAX_FORECAST;
       AverageAP = AverageAP/MAX_FORECAST; //forecastPressure
       return true;
    }

@@ -67,6 +67,7 @@ public:
 
    void ShowM5PaperInfo();
    void ShowM5Paper_SHT30_Info();
+   void DrawAkkuMode_Info();
 };
 
 /* Draw a circle with optional start and end point */
@@ -489,5 +490,21 @@ void WeatherDisplay::ShowM5Paper_SHT30_Info()
    DrawM5PaperInfo(0, 0, 245, 251);
    
    canvas.pushCanvas(697, 35, UPDATE_MODE_GC16);
+   delay(1000);
+}
+
+//by Zell , to call with total refresh mode
+void WeatherDisplay::DrawAkkuMode_Info()
+{
+   Serial.println("#>:DrawAkkuModeInfo");
+   canvas.deleteCanvas();
+   canvas.createCanvas(120, 25);
+
+   canvas.setTextSize(2);
+   canvas.setTextColor(WHITE, BLACK);
+   //canvas.setTextDatum(TL_DATUM);
+   canvas.drawString("Akku", 20, 10);
+
+   canvas.pushCanvas(697-100, 0, UPDATE_MODE_GC16);
    delay(1000);
 }

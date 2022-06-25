@@ -1,4 +1,6 @@
 
+#define AKKU_touch_GUI_X  697
+#define AKKU_touch_GUI_Y  250
 
 void selector()
 {
@@ -109,3 +111,103 @@ if(M5.TP.avaliable())// check if touch driver is reachable
 }
 }
 }
+
+bool Akku_mode_selector(void){
+  bool ret = false;
+  int c=0;
+   M5.TP.flush();// reset values
+   delay(10);
+   M5.TP.update();
+   while (M5.TP.getFingerNum() == 0)// while no fingers are detected
+  {
+    delay(50);  
+    M5.TP.update();
+    Serial.println("waiting ..");
+    c++;
+    if(c>=800)// to go to sleep if nothing has happened after 60sec-> energysaving 
+    {
+      c=0;
+      break;
+    }
+    
+  }
+  
+  if(M5.TP.avaliable())// check if touch driver is reachable
+  {  if (M5.TP.getFingerNum() >0 )// when input is received
+    {
+    
+    int i;
+    //int b = 15;
+    tp_finger_t FingerItem= M5.TP.readFinger(i);
+    point [i][0] = FingerItem.x;
+    point [i][1] = FingerItem.y;
+    Serial.print("Touch_X:");  
+    Serial.println(FingerItem.x);
+    Serial.print("Touch_Y:");
+    Serial.println(FingerItem.y);
+    if( (FingerItem.x>=AKKU_touch_GUI_X)&&(FingerItem.y<=AKKU_touch_GUI_Y) ){
+      Serial.print("#>: Akku mode touch trigers\r\n");
+      ret =Akku_mode_confirm();
+
+       
+    }
+
+    
+    }
+    
+  
+  }
+
+  return ret;
+
+}  
+
+bool Akku_mode_confirm(void){
+   bool ret = false;
+   int c=0;
+   M5.TP.flush();// reset values
+   delay(10);
+   M5.TP.update();
+   while (M5.TP.getFingerNum() == 0)// while no fingers are detected
+  {
+    delay(50);  
+    M5.TP.update();
+    Serial.println("waiting touch...");
+    c++;
+    if(c>=200)// to go to sleep if nothing has happened after 60sec-> energysaving 
+    {
+      c=0;
+      break;
+    }
+    
+  }
+  if(M5.TP.avaliable())// check if touch driver is reachable
+  {  if (M5.TP.getFingerNum() >0 )// when input is received
+    {
+    
+    int i;
+    //int b = 15;
+    tp_finger_t FingerItem= M5.TP.readFinger(i);
+    point [i][0] = FingerItem.x;
+    point [i][1] = FingerItem.y;
+    Serial.print("Touch_X:");  
+    Serial.println(FingerItem.x);
+    Serial.print("Touch_Y:");
+    Serial.println(FingerItem.y);
+    if( (FingerItem.x>=AKKU_touch_GUI_X)&&(FingerItem.y<=AKKU_touch_GUI_Y) ){
+      Serial.print("#>: Akku mode touch confirmed\r\n");
+        ret =true;
+
+       
+      }
+
+    
+    }
+    
+  
+  }
+
+  return ret;
+
+}
+      

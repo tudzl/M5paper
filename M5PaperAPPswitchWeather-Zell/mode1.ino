@@ -15,7 +15,8 @@
 
 // Refresh the M5Paper info more often.
 //#define REFRESH_PARTLY 1
-#define Refresh_min_interval 5 // sleep-wakeup/update cycle
+#define Refresh_min_interval 30 // sleep-wakeup/update cycle
+#define Refresh_Seconds_interval_USB 30
 bool USB_Plug_in = false;
 int cycle_cnt = 0;
 MyData         myData;            // The collection of the global data
@@ -41,7 +42,7 @@ void mode1()
       M5.BatteryADCBegin();//need this to init ADC before calling ADC sampling function 
       GetBatteryValues(myData);
       
-      if(myData.batteryCapacity = 1){
+      if(myData.batteryCapacity = 1){//need improve
          //when usb plug-in, vbat=3.3, soc=1%? why
          USB_Plug_in = true;
       }
@@ -58,18 +59,22 @@ void mode1()
    }
    delay(1000);
    if(USB_Plug_in){
-    delay(1000*Refresh_min_interval);
+    delay(1000*Refresh_Seconds_interval_USB);
     Serial.println("#>- update SHT30 data");
     GetSHT30Values(myData);
     myDisplay.ShowM5Paper_SHT30_Info();
-    Cycle_show_M5PaperInfo();
+    Cycle_show_M5PaperInfo(); // 30S interval to update values
     //update in area (697, 35, 245, 251)
-    Serial.println("#>:esp_deep_sleep_start");
-    esp_deep_sleep_start();
+    //Serial.println("#>:esp_deep_sleep_start");
+    //esp_deep_sleep_start();
    }
-   Serial.print("#>: Shutdown Now... will wakeup every ? min:");
-   Serial.println(Refresh_min_interval);
+   Serial.printf("#>:Entering low power mode, will wakeup every %d min.Shutdown Now...\r\n",Refresh_min_interval);
+   //Serial.println(Refresh_min_interval);
    ShutdownEPD(60 * Refresh_min_interval); // every  5 min   wakeup!
+   delay(1000);
+   Serial.println("#>:LPM failed,Entering esp_deep_sleep now... ");
+   esp_deep_sleep_start();
+   
    //ShutdownEPD(60 * 60); // every 1 hour   wakeup!
 #else 
    myData.LoadNVS();
@@ -136,10 +141,29 @@ void  Cycle_show_M5PaperInfo()
            cycle_EN_USB_DC_mode = false;
            Serial.println("#>: Low Akku (<75%), fast cycle mode exit now...");
     }
-    delay(1000*30);
+
+    Serial.println("#>:Checking Akku mode touch input...");
+    //delay(1000*30); // improve
+    for (int i=0;i<Refresh_Seconds_interval_USB;i++){
+      if(Akku_mode_selector()){
+        myDisplay.DrawAkkuMode_Info();
+        cycle_EN_USB_DC_mode =false;
+        i=Refresh_Seconds_interval_USB;
+        
+      }
+      delay(1000);
+      
+    }
     //Serial.printf("#>:Battery Vol: %3.2f V\r\n",myData.batteryVolt);
     Serial.printf("#>:Battery Raw: %3.2f V\r\n",myData.batteryVolt_raw);
     Serial.printf("APP running cycle cnt:%d\r\n",cycle_cnt);
+    //Serial.println("#>:Checking Akku mode touch input...");
+//    if(Akku_mode_selector()){
+//      myDisplay.DrawAkkuMode_Info();
+//      cycle_EN_USB_DC_mode =false;
+        Serial.println("#>:Activate Akku mode, fast cycle mode exit now...");
+        break;
+//    }
   }
    
 }
