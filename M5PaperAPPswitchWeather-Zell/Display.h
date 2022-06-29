@@ -26,6 +26,7 @@
 
 //M5EPD_Canvas canvas(&M5.EPD); // Main canvas of the e-paper
 char title_payload[16] ;
+char bar_payload[16] ;
 /* Main class for drawing the content to the e-paper display. */
 class WeatherDisplay
 {
@@ -64,7 +65,7 @@ public:
    }
 
    void Show();
-
+   void UpdateHead(); //updae version and akku info
    void ShowM5PaperInfo();
    void ShowM5Paper_SHT30_Info();
    void DrawAkkuMode_Info();
@@ -117,6 +118,17 @@ void WeatherDisplay::DrawHead()
    DrawRSSI(maxX - 155, 25);
    canvas.drawString(String((int)myData.Akku_SOC) + "%", maxX - 110, 10);
    DrawBattery(maxX - 65, 10);
+}
+
+void WeatherDisplay::UpdateHead()
+{
+   canvas.drawString(bar_payload, 20, 10);
+   //canvas.drawCentreString(CITY_NAME, maxX / 2, 10, 1);
+  // canvas.drawString(WifiGetRssiAsQuality(myData.wifiRSSI) + "%", maxX - 200, 10);
+  // DrawRSSI(maxX - 155, 25);
+   canvas.drawString(String((int)myData.Akku_SOC) + "%", maxX - 110, 10);
+   DrawBattery(maxX - 65, 10);
+   canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
 }
 
 /* Draw one icon from the binary data */
@@ -301,7 +313,8 @@ void WeatherDisplay::DrawM5PaperInfo(int x, int y, int dx, int dy)
 
    canvas.setTextSize(3);
    DrawIcon(x + 35, y + 140, (uint16_t *) TEMPERATURE64x64);
-   canvas.drawString(String(myData.sht30Temperatur) + " C", x + 35, y + 210, 1);
+   //canvas.drawString(String(myData.sht30Temperatur) + " C", x + 35, y + 210, 1);
+   canvas.drawString(String(myData.sht30Temp), x + 35, y + 210, 1);
    DrawIcon(x + 145, y + 140, (uint16_t *) HUMIDITY64x64);
    canvas.drawString(String(myData.sht30Humidity) + "%", x + 150, y + 210, 1);
    
@@ -501,9 +514,9 @@ void WeatherDisplay::DrawAkkuMode_Info()
    canvas.createCanvas(120, 25);
 
    canvas.setTextSize(2);
-   canvas.setTextColor(WHITE, BLACK);
+   canvas.setTextColor(0x05);
    //canvas.setTextDatum(TL_DATUM);
-   canvas.drawString("Akku", 20, 10);
+   canvas.drawString("Akku.MD", 20, 10);
 
    canvas.pushCanvas(697-100, 0, UPDATE_MODE_GC16);
    delay(1000);

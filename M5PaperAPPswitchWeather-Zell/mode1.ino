@@ -31,9 +31,12 @@ void mode1()
     //canvas.createCanvas(540, 960);
     canvas.createCanvas(960, 540);
     canvas.setTextSize(5);
+    canvas.setTextColor(0x08); //TFT_eSPI::setTextColor(fgcolor, bgcolor)
     canvas.drawString("mode 1!", 70, 400); 
+    canvas.setTextColor(WHITE, BLACK);
     canvas.drawString("Weather station!", 70, 300); 
     canvas.setTextSize(4);
+    canvas.setTextColor(0x04); 
     canvas.drawString("Conneting Wifi now...", 70, 100); 
     canvas.pushCanvas(0,0,UPDATE_MODE_GC16);
    
@@ -70,9 +73,18 @@ void mode1()
    }
    Serial.printf("#>:Entering low power mode, will wakeup every %d min.Shutdown Now...\r\n",Refresh_min_interval);
    //Serial.println(Refresh_min_interval);
+   gpio_hold_dis((gpio_num_t)2); // release the gpio pin to make a proper shutdown possible
    ShutdownEPD(60 * Refresh_min_interval); // every  5 min   wakeup!
    delay(1000);
+   memset(bar_payload, 0, sizeof(title_payload));
+   sprintf(bar_payload, "LPM fail,sleep."); //
+   Serial.println("#>:LPM failed,Update Head info");
+   myDisplay.UpdateHead();
    Serial.println("#>:LPM failed,Entering esp_deep_sleep now... ");
+   M5.disableEPDPower();
+   M5.disableEXTPower();
+   M5.disableMainPower();
+   esp_sleep_enable_timer_wakeup(60*Refresh_min_interval * 1000000);
    esp_deep_sleep_start();
    
    //ShutdownEPD(60 * 60); // every 1 hour   wakeup!

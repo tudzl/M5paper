@@ -39,6 +39,7 @@ public:
    float   Akku_SOC; //SOC in 0% to 100%
    int     batteryCapacity;  //!< The current battery capacity
    int     sht30Temperatur;  //!< SHT30 temperature
+   float   sht30Temp;        //!< SHT30 high res temperature
    int     sht30Humidity;    //!< SHT30 humidity
 
    time_t  moonRise;         //!< Calculated moon rise
@@ -71,7 +72,7 @@ public:
       Serial.println("BatteryVolt: "     + String(batteryVolt));
       Serial.println("BatteryCapacity: " + String(batteryCapacity));
       Serial.println("BatterySOC: " + String(Akku_SOC));
-      Serial.println("Sht30Temperatur: " + String(sht30Temperatur));
+      Serial.println("Sht30Temperatur: " + String(sht30Temp));
       Serial.println("Sht30Humidity: "   + String(sht30Humidity));
       Serial.println("MoonRise: "        + getDateTimeString(moonRise));
       Serial.println("MoonSet: "         + getDateTimeString(moonSet));

@@ -44,6 +44,9 @@ void InitEPD(bool clearDisplay = true)
 void ShutdownEPD(int sec)
 {
    Serial.println("Shutdown");
+   M5.disableEPDPower();
+   M5.disableEXTPower();
+   M5.disableMainPower();
 /*
    M5.disableEPDPower();
    M5.disableEXTPower();
