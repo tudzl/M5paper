@@ -14,7 +14,7 @@
       set_time();
  }
   MinRefresh ();
-  Shutdown();
+  Shutdown();//wake up  every 60 second?
   
 //  delay(10000);
 //  Turn_off();

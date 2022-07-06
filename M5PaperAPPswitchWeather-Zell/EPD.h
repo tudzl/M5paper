@@ -40,6 +40,14 @@ void InitEPD(bool clearDisplay = true)
  *  Shutdown the M5Paper 
  *  NOTE: the M5Paper could not shutdown while on usb connection.
  *        In this case use the esp_deep_sleep_start() function.
+ *            void enableEXTPower() { digitalWrite(M5EPD_EXT_PWR_EN_PIN, 1); }
+    void disableEXTPower() { digitalWrite(M5EPD_EXT_PWR_EN_PIN, 0); }
+    void enableEPDPower() { digitalWrite(M5EPD_EPD_PWR_EN_PIN, 1); }
+    void disableEPDPower() { digitalWrite(M5EPD_EPD_PWR_EN_PIN, 0); }
+    void enableMainPower() { digitalWrite(M5EPD_MAIN_PWR_PIN, 1); }
+    void disableMainPower() { digitalWrite(M5EPD_MAIN_PWR_PIN, 0); }
+ *        
+ *        
 */
 void ShutdownEPD(int sec)
 {

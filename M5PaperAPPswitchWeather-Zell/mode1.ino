@@ -76,9 +76,9 @@ void mode1()
    gpio_hold_dis((gpio_num_t)2); // release the gpio pin to make a proper shutdown possible
    ShutdownEPD(60 * Refresh_min_interval); // every  5 min   wakeup!
    delay(1000);
-   memset(bar_payload, 0, sizeof(title_payload));
-   sprintf(bar_payload, "LPM fail,sleep."); //
-   Serial.println("#>:LPM failed,Update Head info");
+   memset(bar_payload, 0, sizeof(bar_payload));
+   sprintf(bar_payload, "LPM Failed!"); //
+   Serial.println("#>:LPM failed,Update draw Head info");
    myDisplay.UpdateHead();
    Serial.println("#>:LPM failed,Entering esp_deep_sleep now... ");
    M5.disableEPDPower();
