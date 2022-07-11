@@ -122,20 +122,24 @@ void WeatherDisplay::DrawHead()
 
 void WeatherDisplay::UpdateHead()
 {
+   M5.enableEPDPower();
    canvas.deleteCanvas();
-   canvas.createCanvas(maxX, 30);
+   //canvas.createCanvas(230, 34);
+   canvas.createCanvas(maxX, 34);
    memset(bar_payload, 0, sizeof(bar_payload));
    sprintf(bar_payload, "LPM Failed!"); //
    canvas.setTextSize(2);
+   canvas.setTextColor(0x0C);
    canvas.setTextColor(WHITE,BLACK);
    canvas.drawString(bar_payload, 20, 10);
-   //canvas.drawCentreString(CITY_NAME, maxX / 2, 10, 1);
-  // canvas.drawString(WifiGetRssiAsQuality(myData.wifiRSSI) + "%", maxX - 200, 10);
-  // DrawRSSI(maxX - 155, 25);
-   canvas.drawString(String((int)myData.Akku_SOC) + "%", maxX - 110, 10);
-   DrawBattery(maxX - 65, 10);
+   canvas.drawCentreString(CITY_NAME, maxX / 2, 10, 1);
+   canvas.drawString(WifiGetRssiAsQuality(myData.wifiRSSI) + "%", maxX - 200, 10);
+   DrawRSSI(maxX - 155, 25);
+    canvas.drawString(String((int)myData.Akku_SOC) + "%", maxX - 110, 10);
+    DrawBattery(maxX - 65, 10);
    canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
-   delay(100);
+   delay(800);
+   M5.disableEPDPower();
 }
 
 /* Draw one icon from the binary data */

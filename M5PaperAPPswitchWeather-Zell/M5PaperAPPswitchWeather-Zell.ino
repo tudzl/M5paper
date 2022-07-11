@@ -1,5 +1,7 @@
 /*
-Sketch uses 1098313 bytes (16%) of program storage space. Maximum is 6553600 bytes.
+//Sketch uses 1098313 bytes (16%) of program storage space. Maximum is 6553600 bytes.
+Sketch uses 1108257 bytes (16%) of program storage space. Maximum is 6553600 bytes.
+
 Global variables use 42096 bytes (0%) of dynamic memory, leaving 4479888 bytes for local variables. Maximum is 4521984 bytes.
 
 */
@@ -35,7 +37,7 @@ char timeStrbuff[64];
 // for NTP to RTC time
 time_t t;
 struct tm *tm;
-char *version_info="V2.0,22.June.2022, Author: Zell";
+char *version_info="V2.0, 06.Juli.2022, Author: Zell";
 
 void setup() {
   M5.begin(true,false,true,false,true); //Touchscreen,SDreader, Serial,BatteryADC,I2C

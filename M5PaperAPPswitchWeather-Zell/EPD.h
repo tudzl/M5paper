@@ -51,10 +51,28 @@ void InitEPD(bool clearDisplay = true)
 */
 void ShutdownEPD(int sec)
 {
-   Serial.println("Shutdown");
+   Serial.println("##:ShutdownEPD now");
    M5.disableEPDPower();
    M5.disableEXTPower();
    M5.disableMainPower();
+/*
+   M5.disableEPDPower();
+   M5.disableEXTPower();
+   M5.disableMainPower();
+   esp_sleep_enable_timer_wakeup(sec * 1000000);
+   esp_deep_sleep_start();   
+*/   
+   M5.shutdown(sec);
+}
+
+void ShutdownEPD_BAT(int sec)
+{
+   Serial.println("##:ShutdownEPD now");
+   M5.disableEPDPower();
+   delay(10);
+   M5.disableEXTPower();
+   delay(10);
+   //M5.disableMainPower();
 /*
    M5.disableEPDPower();
    M5.disableEXTPower();

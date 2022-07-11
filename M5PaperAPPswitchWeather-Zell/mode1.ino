@@ -15,7 +15,7 @@
 
 // Refresh the M5Paper info more often.
 //#define REFRESH_PARTLY 1
-#define Refresh_min_interval 30 // sleep-wakeup/update cycle
+#define Refresh_min_interval 5 // sleep-wakeup/update cycle
 #define Refresh_Seconds_interval_USB 30
 bool USB_Plug_in = false;
 int cycle_cnt = 0;
@@ -31,12 +31,12 @@ void mode1()
     //canvas.createCanvas(540, 960);
     canvas.createCanvas(960, 540);
     canvas.setTextSize(5);
-    canvas.setTextColor(0x08); //TFT_eSPI::setTextColor(fgcolor, bgcolor)
+    canvas.setTextColor(0x09); //TFT_eSPI::setTextColor(fgcolor, bgcolor)
     canvas.drawString("mode 1!", 70, 400); 
     canvas.setTextColor(WHITE, BLACK);
     canvas.drawString("Weather station!", 70, 300); 
     canvas.setTextSize(4);
-    canvas.setTextColor(0x04); 
+    canvas.setTextColor(0x06); 
     canvas.drawString("Conneting Wifi now...", 70, 100); 
     canvas.pushCanvas(0,0,UPDATE_MODE_GC16);
    
@@ -60,10 +60,10 @@ void mode1()
       myDisplay.Show();
       StopWiFi();
    }
-   delay(1000);
+   delay(500);
    if(USB_Plug_in){
     delay(1000*Refresh_Seconds_interval_USB);
-    Serial.println("#>- update SHT30 data");
+    Serial.println("#>USB_Plug_in mode - update SHT30 data");
     GetSHT30Values(myData);
     myDisplay.ShowM5Paper_SHT30_Info();
     Cycle_show_M5PaperInfo(); // 30S interval to update values
@@ -74,7 +74,8 @@ void mode1()
    Serial.printf("#>:Entering low power mode, will wakeup every %d min.Shutdown Now...\r\n",Refresh_min_interval);
    //Serial.println(Refresh_min_interval);
    gpio_hold_dis((gpio_num_t)2); // release the gpio pin to make a proper shutdown possible
-   ShutdownEPD(60 * Refresh_min_interval); // every  5 min   wakeup!
+   //ShutdownEPD(60 * Refresh_min_interval); // every  5/30 min   wakeup!
+   ShutdownEPD_BAT(60 * Refresh_min_interval); // every  5/30 min   wakeup!
    delay(1000);
    memset(bar_payload, 0, sizeof(bar_payload));
    sprintf(bar_payload, "LPM Failed!"); //
@@ -82,10 +83,15 @@ void mode1()
    myDisplay.UpdateHead();
    Serial.println("#>:LPM failed,Entering esp_deep_sleep now... ");
    M5.disableEPDPower();
+   delay(100);
    M5.disableEXTPower();
+   delay(100);
    M5.disableMainPower();
+   delay(100);
    esp_sleep_enable_timer_wakeup(60*Refresh_min_interval * 1000000);
+   delay(100);
    esp_deep_sleep_start();
+   Cycle_show_M5PaperInfo(); // 30S interval to update values
    
    //ShutdownEPD(60 * 60); // every 1 hour   wakeup!
 #else 
@@ -139,6 +145,7 @@ void mode1()
 void  Cycle_show_M5PaperInfo()
 {
   bool cycle_EN_USB_DC_mode = true;
+  M5.enableEPDPower();
   while(cycle_EN_USB_DC_mode){
     myDisplay.ShowM5Paper_SHT30_Info();
     myData.Dump();
@@ -166,6 +173,7 @@ void  Cycle_show_M5PaperInfo()
       delay(1000);
       
     }
+    M5.disableEPDPower();
     //Serial.printf("#>:Battery Vol: %3.2f V\r\n",myData.batteryVolt);
     Serial.printf("#>:Battery Raw: %3.2f V\r\n",myData.batteryVolt_raw);
     Serial.printf("APP running cycle cnt:%d\r\n",cycle_cnt);

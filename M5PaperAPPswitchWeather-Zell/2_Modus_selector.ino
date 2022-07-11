@@ -114,20 +114,28 @@ if(M5.TP.avaliable())// check if touch driver is reachable
 
 bool Akku_mode_selector(void){
   bool ret = false;
-  int c=0;
+  int c=1;
    M5.TP.flush();// reset values
    delay(10);
    M5.TP.update();
-   while (M5.TP.getFingerNum() == 0)// while no fingers are detected
+   while((c>0)&&(M5.TP.getFingerNum() == 0))// while no fingers are detected
   {
-    delay(50);  
+    delay(25);  
     M5.TP.update();
-    Serial.println("waiting ..");
-    c++;
-    if(c>=800)// to go to sleep if nothing has happened after 60sec-> energysaving 
+    if(c%20==0)// to go to sleep if nothing has happened after 60sec-> energysaving 
     {
-      c=0;
+    Serial.printf("waiting ..%d\r\n",c);
+    }
+   
+    c++;
+    if(c>=100)// to go to sleep if nothing has happened after 60sec-> energysaving 
+    {
+      c=-1;
+      Serial.println("exit waiting!..");
       break;
+      break;
+      ret = false;
+      return ret;
     }
     
   }
@@ -174,7 +182,7 @@ bool Akku_mode_confirm(void){
     M5.TP.update();
     Serial.println("waiting touch...");
     c++;
-    if(c>=200)// to go to sleep if nothing has happened after 60sec-> energysaving 
+    if(c>=100)// to go to sleep if nothing has happened after 60sec-> energysaving 
     {
       c=0;
       break;
