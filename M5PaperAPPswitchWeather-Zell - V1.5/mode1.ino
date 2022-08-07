@@ -41,7 +41,7 @@ void mode1()
     canvas.drawString("Conneting Wifi now...", 70, 100); 
     canvas.pushCanvas(0,0,UPDATE_MODE_GC16);
     delay(600);
-    M5.disableEPDPower();//to save power
+    //M5.disableEPDPower();//to save power
    if (StartWiFi(myData.wifiRSSI)) { //wifiRSSI !< The wifi signal strength
       Serial.println("#>:Collecting sensor data...");   
       M5.BatteryADCBegin();//need this to init ADC before calling ADC sampling function 
@@ -59,9 +59,9 @@ void mode1()
          SetRTCDateTime(myData);
       }
       M5.enableEPDPower();   
-      delay(300);
+      //delay(300);
       myData.Dump();
-      delay(150);
+      delay(50);
       Serial.println("#>main Display.Show!");
       myDisplay.Show();
       delay(150);
@@ -91,7 +91,7 @@ void mode1()
    //sprintf(bar_payload, "LPM Failed!"); //
    Serial.println("#>:LPM failed,Update draw Head info");
    //M5.enableEPDPower();
-   //myDisplay.UpdateHead();
+   //myDisplay.UpdateHead(); //bugs here, stuck in push!
    Serial.println("#>:LPM failed,Entering esp_deep_sleep now... ");
    
    delay(100);
