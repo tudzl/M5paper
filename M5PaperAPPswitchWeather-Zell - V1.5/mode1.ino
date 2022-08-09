@@ -1,5 +1,7 @@
 //weather app
 #include <M5EPD.h>
+#include "FS.h"
+#include "SPIFFS.h"
 #include "Config.h"
 //#include "ConfigOverride.h" // Remove this line
 #include "Data.h"
@@ -12,6 +14,8 @@
 #include "Time.h"
 #include "Utils.h"
 #include "Weather.h"
+#include <SD.h>
+#define PIN_SPI_CS_TF 4
 
 // Refresh the M5Paper info more often.
 //#define REFRESH_PARTLY 1
@@ -28,6 +32,9 @@ void mode1()
    #ifndef REFRESH_PARTLY
    InitEPD(true);
    M5.enableEPDPower();//to save power
+   //pinMode(PIN_SPI_CS_TF , OUTPUT); //no effect?
+   pinMode(PIN_SPI_CS_TF , INPUT_PULLUP); 
+   //digitalWrite(PIN_SPI_CS_TF,HIGH); //disable SD card
     canvas.deleteCanvas();
     //canvas.createCanvas(540, 960);
     canvas.createCanvas(960, 540);

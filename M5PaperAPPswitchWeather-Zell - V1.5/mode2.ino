@@ -1,3 +1,6 @@
+#include "FS.h"
+#include "SPIFFS.h"
+
  void mode2()
 {
 //

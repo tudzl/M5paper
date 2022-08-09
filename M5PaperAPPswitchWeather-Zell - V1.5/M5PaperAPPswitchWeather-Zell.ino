@@ -1,3 +1,4 @@
+
 /*
 //Sketch uses 1098313 bytes (16%) of program storage space. Maximum is 6553600 bytes.
 Sketch uses 1108257 bytes (16%) of program storage space. Maximum is 6553600 bytes.
@@ -7,6 +8,7 @@ Global variables use 42096 bytes (0%) of dynamic memory, leaving 4479888 bytes f
 */
 #include <M5EPD.h> 
 #include "SPIFFS.h"
+#include "FS.h"
 #define FORMAT_SPIFFS_IF_FAILED true
 #include <esp_wifi.h>
 #include <esp_bt.h>
@@ -15,7 +17,7 @@ WiFiMulti wifiMulti;
 #include "configuration.h" 
 
 #include "credentials.h"
-
+#define PIN_SPI_CS_TF 4
 M5EPD_Canvas canvas(&M5.EPD); // setup for the Display
 
 
@@ -46,6 +48,8 @@ void setup() {
   M5.EPD.SetRotation(90); // for the Screen to be upright
   //M5.EPD.Clear(true);  //if you want a Full refresh after every start
   M5.update();//added by Zell
+   pinMode(PIN_SPI_CS_TF , OUTPUT); 
+   digitalWrite(PIN_SPI_CS_TF,HIGH); //disable SD card
 
   if( M5.BtnL.wasPressed()){
     app_launch_sellect = true;

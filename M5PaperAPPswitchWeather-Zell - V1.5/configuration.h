@@ -8,8 +8,8 @@ const int Number_of_modes = 6; //between 1 and 7 modes are possible
 // max Lenght of the String is 20 Symbols
 const String Mode_0 = "WeatherSTA";
 const String Mode_1 = "RTC_NTP time";//mode2
-const String Mode_2 = "mode3";
-const String Mode_3 = "mode4";
+const String Mode_2 = "QR_Alipay";
+const String Mode_3 = "QR_Wechat";
 const String Mode_4 = "mode5";
 const String Mode_5 = "mode6";
 const String Mode_6 = "mode7";

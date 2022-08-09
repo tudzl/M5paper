@@ -1,3 +1,5 @@
+#include "FS.h"
+#include "SPIFFS.h"
 
 #define AKKU_touch_GUI_X  697
 #define AKKU_touch_GUI_Y  250
