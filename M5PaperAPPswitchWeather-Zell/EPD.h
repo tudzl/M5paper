@@ -82,3 +82,22 @@ void ShutdownEPD_BAT(int sec)
 */   
    M5.shutdown(sec);
 }
+
+//shutdown without wakeup, for low battery status
+void ShutdownEPD_BAT_low()
+{
+   Serial.println("##:ShutdownEPD now");
+   M5.disableEPDPower();
+   delay(10);
+   M5.disableEXTPower();
+   delay(10);
+   //M5.disableMainPower();
+/*
+   M5.disableEPDPower();
+   M5.disableEXTPower();
+   M5.disableMainPower();
+   esp_sleep_enable_timer_wakeup(sec * 1000000);
+   esp_deep_sleep_start();   
+*/   
+   M5.shutdown();
+}

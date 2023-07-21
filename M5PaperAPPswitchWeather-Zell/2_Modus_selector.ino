@@ -1,4 +1,6 @@
-
+#include "FS.h"
+#include "SPIFFS.h"
+#include <M5EPD.h> 
 #define AKKU_touch_GUI_X  697
 #define AKKU_touch_GUI_Y  250
 
@@ -14,8 +16,10 @@ void selector()
   canvas.drawString("Touch to Start", 60, 440);
   canvas.pushCanvas(0,0,UPDATE_MODE_GC16);
   a=0;
+  bool TP_Status = M5.TP.available();
+  //M5.TP.available();
 
-if(M5.TP.avaliable())// check if touch driver is reachable
+if(TP_Status)// check if touch driver is reachable
 {
   int c=0;
   M5.TP.flush();// reset values
@@ -118,6 +122,7 @@ bool Akku_mode_selector(void){
    M5.TP.flush();// reset values
    delay(10);
    M5.TP.update();
+   M5.disableEPDPower();//to save power
    while((c>0)&&(M5.TP.getFingerNum() == 0))// while no fingers are detected
   {
     delay(25);  
@@ -131,7 +136,8 @@ bool Akku_mode_selector(void){
     if(c>=100)// to go to sleep if nothing has happened after 60sec-> energysaving 
     {
       c=-1;
-      Serial.println("exit waiting!..");
+      Serial.println("exit waiting! Finger TP not detected..");
+      Serial.println("Touch with finger to enter Akku mode!");
       break;
       break;
       ret = false;
@@ -140,7 +146,7 @@ bool Akku_mode_selector(void){
     
   }
   
-  if(M5.TP.avaliable())// check if touch driver is reachable
+  if(M5.TP.available())// check if touch driver is reachable
   {  if (M5.TP.getFingerNum() >0 )// when input is received
     {
     
@@ -189,7 +195,7 @@ bool Akku_mode_confirm(void){
     }
     
   }
-  if(M5.TP.avaliable())// check if touch driver is reachable
+  if(M5.TP.available())// check if touch driver is reachable
   {  if (M5.TP.getFingerNum() >0 )// when input is received
     {
     

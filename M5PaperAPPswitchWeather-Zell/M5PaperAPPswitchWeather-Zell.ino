@@ -1,12 +1,24 @@
+
 /*
-//Sketch uses 1098313 bytes (16%) of program storage space. Maximum is 6553600 bytes.
+V2.0
+Sketch uses 1098313 bytes (16%) of program storage space. Maximum is 6553600 bytes.
 Sketch uses 1108257 bytes (16%) of program storage space. Maximum is 6553600 bytes.
+V2.1
+Sketch uses 1367129 bytes (20%) of program storage space. Maximum is 6553600 bytes.
+Global variables use 52024 bytes (1%) of dynamic memory, leaving 4469960 bytes for local variables. Maximum is 4521984 bytes.
 
 Global variables use 42096 bytes (0%) of dynamic memory, leaving 4479888 bytes for local variables. Maximum is 4521984 bytes.
-
+V2.2C try to fix issue that SHT30 values not updated when in Akku mode
+V2.2B
+V2.2 improved GUI, bin export cost 22 to 23 sec on MAC M1
+V2.1 add low battery shutdown
+21.july.2023
+version_info="V2.0, 06.Juli.2022, Author: Zell";
+issue found: not working with api.openweathermap.org staring from june.2023
 */
 #include <M5EPD.h> 
 #include "SPIFFS.h"
+#include "FS.h"
 #define FORMAT_SPIFFS_IF_FAILED true
 #include <esp_wifi.h>
 #include <esp_bt.h>
@@ -15,7 +27,7 @@ WiFiMulti wifiMulti;
 #include "configuration.h" 
 
 #include "credentials.h"
-
+#define PIN_SPI_CS_TF 4
 M5EPD_Canvas canvas(&M5.EPD); // setup for the Display
 
 
@@ -37,16 +49,19 @@ char timeStrbuff[64];
 // for NTP to RTC time
 time_t t;
 struct tm *tm;
-char *version_info="V2.0, 06.Juli.2022, Author: Zell";
+char *version_info="V2.2C, 21.Juli.2023, Author: Zell";
 
 void setup() {
   M5.begin(true,false,true,false,true); //Touchscreen,SDreader, Serial,BatteryADC,I2C
   Serial.println("M5paper App Launch program Angeschaltet");
   Serial.printf("FW version:%s\r\n",version_info);
-  M5.EPD.SetRotation(90); // for the Screen to be upright
+  //M5.EPD.SetRotation(1);
+  //M5.EPD.SetRotation(90); // for the Screen to be upright
   //M5.EPD.Clear(true);  //if you want a Full refresh after every start
   M5.update();//added by Zell
-
+  pinMode(PIN_SPI_CS_TF , OUTPUT); 
+  digitalWrite(PIN_SPI_CS_TF,HIGH); //disable SD card
+  Serial.printf("Press Btns to launch APP sellect\r\n");
   if( M5.BtnL.wasPressed()){
     app_launch_sellect = true;
     Serial.println("BtnL > launch APP sellect");

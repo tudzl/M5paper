@@ -119,10 +119,11 @@ void WeatherDisplay::DrawHead()
    canvas.drawString(String((int)myData.Akku_SOC) + "%", maxX - 110, 10);
    DrawBattery(maxX - 65, 10);
 }
-
+/* Draw a the head with bar_payload,   rssi and battery */
 void WeatherDisplay::UpdateHead()
 {
    M5.enableEPDPower();
+   Serial.println("#>EPDPower ON, create Canvas!");
    canvas.deleteCanvas();
    //canvas.createCanvas(230, 34);
    canvas.createCanvas(maxX, 34);
@@ -135,11 +136,13 @@ void WeatherDisplay::UpdateHead()
    canvas.drawCentreString(CITY_NAME, maxX / 2, 10, 1);
    canvas.drawString(WifiGetRssiAsQuality(myData.wifiRSSI) + "%", maxX - 200, 10);
    DrawRSSI(maxX - 155, 25);
-    canvas.drawString(String((int)myData.Akku_SOC) + "%", maxX - 110, 10);
-    DrawBattery(maxX - 65, 10);
-   canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
-   delay(800);
-   M5.disableEPDPower();
+   canvas.drawString(String((int)myData.Akku_SOC) + "%", maxX - 110, 10);
+   DrawBattery(maxX - 65, 10);
+   Serial.println("#>pushCanvas!");
+   canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);//???
+   //delay(800);
+   //M5.disableEPDPower();
+   Serial.println("#>Display:UpdateHead finished!");
 }
 
 /* Draw one icon from the binary data */

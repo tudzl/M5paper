@@ -21,7 +21,7 @@
   */
 #pragma once
 
-#define VERSION          "Ver 1.4 Juli.2022"
+#define VERSION          "Ver 2.2 Juli.2023"
 #define CITY_NAME        "Hangzhou_Zell"
 
 // change to your location
