@@ -38,11 +38,12 @@ float T_max,T_min;
 int H_max,H_min;
 void SensorValue_record(float T_cur, int H_cur );
 void SensorValue_history_read(void );
-
+void SensorValue_history_check(void);
 
 void mode1()
 { // here you put your mode1 program
 Serial.println("#>: Entering Mode 1 APP...");
+SensorValue_history_check();
 #ifndef REFRESH_PARTLY
   InitEPD(true);
   M5.enableEPDPower();//to save power
@@ -254,12 +255,17 @@ void  Cycle_show_M5PaperInfo()
 void SensorValue_record(float T_cur, int H_cur ){
      //update min max values
     if (1==cycle_cnt){
-      
-      T_min = T_cur;
       H_min = H_cur;
+      if (0 == T_min)
+          T_min = T_cur;
+      //T_min = T_cur;
     }
     if (0==cycle_cnt){
       SensorValue_history_read ();
+      if (0 == T_min){
+        T_min = T_cur;
+        Serial.printf("#>:0 cycle--updated SPIFFS--T_max&min: %5.2F C, %5.2F C\r\n",T_max,T_min);
+      }
     }
 
     if (T_cur > T_max)
@@ -271,60 +277,67 @@ void SensorValue_record(float T_cur, int H_cur ){
       H_max = H_cur;
     if (H_cur < H_min)
       H_min = H_cur;
-
-
-    //save to SPIFFS
-    if(!SPIFFS.begin())
-    {
-      Serial.println("SPIFFS Mount Failed -> skip T max min saving");
-      //SPIFFS.format();
-      //SPIFFS.begin();  
-      return;
-    }  
-  
-  File file_Max = SPIFFS.open("/TMax.txt","w");
-  //Modus = file3.parseInt(); //get the value from Storage as an integer
- //   File file3 = SPIFFS.open("/Modus.txt","w");
- //parseFloat
-      if (!file_Max) 
-    {
-      Serial.println("#>:Error opening file TMax.txt for writing!");
-      return;
-    }
-      if (file_Max.print(myData.sht30T_max))
-    {
-      Serial.println("- file written TMax");
-    } else {
-      Serial.println("- TMax write failed");
-    }
-    file_Max.close(); 
-  File file_Min = SPIFFS.open("/TMin.txt","w");
-  //Modus = file3.parseInt(); //get the value from Storage as an integer
- //   File file3 = SPIFFS.open("/Modus.txt","w");
- //parseFloat
-      if (!file_Min) 
-    {
-      Serial.println("#>:Error opening file TMin.txt for writing!");
-      return;
-    }
-      if (file_Min.print(myData.sht30T_min))
-    {
-      Serial.println("- file written TMin");
-    } else {
-      Serial.println("- TMin write failed");
-    }
-    file_Min.close();   
     myData.sht30T_max=  T_max;
     myData.sht30T_min=  T_min;
     myData.sht30H_max=  H_max;
     myData.sht30H_min=  H_min;
+
+    if( (0==cycle_cnt%6)&&(cycle_cnt>5)){
+    //save to SPIFFS
+        if(!SPIFFS.begin())
+        {
+          Serial.println("SPIFFS Mount Failed -> skip T max min saving");
+          //SPIFFS.format();
+          //SPIFFS.begin();  
+          return;
+        }  
+      
+       File file_Max = SPIFFS.open("/TMax.txt","w");
+      //Modus = file3.parseInt(); //get the value from Storage as an integer
+    //   File file3 = SPIFFS.open("/Modus.txt","w");
+    //
+          if (!file_Max) 
+        {
+          Serial.println("#>:Error opening file TMax.txt for writing!");
+          return;
+        }
+          if (file_Max.print(myData.sht30T_max))
+        {
+          Serial.println("- file written TMax");
+        } else {
+          Serial.println("- TMax write failed");
+        }
+        file_Max.close(); 
+        if(0!=T_min){
+           File file_Min = SPIFFS.open("/TMin.txt","w");
+      //Modus = file3.parseInt(); //get the value from Storage as an integer
+    //   File file3 = SPIFFS.open("/Modus.txt","w");
+    //parseFloat
+           if (!file_Min) 
+           {
+          Serial.println("#>:Error opening file TMin.txt for writing!");
+          return;
+           }
+          if (file_Min.print(myData.sht30T_min))
+            {
+          Serial.println("- file written TMin");
+            } else {
+          Serial.println("- TMin write failed");
+           }
+          file_Min.close();   
+        //finished saving
+        //readback, debug only
+         }
+        SensorValue_history_check();
+    }
+
 
 
 }
 
 
 void SensorValue_history_read(void){
-
+    float T_max_tmp,T_min_tmp;
     //read from SPIFFS
     if(!SPIFFS.begin())
     {
@@ -343,7 +356,7 @@ void SensorValue_history_read(void){
       Serial.println("#>:Error opening file TMax.txt for reading!");
       return;
     }
-    T_max= file_Max.parseInt(); 
+    T_max_tmp= file_Max.parseFloat(); 
 
     file_Max.close(); 
   File file_Min = SPIFFS.open("/TMin.txt","w");
@@ -355,10 +368,56 @@ void SensorValue_history_read(void){
       Serial.println("#>:Error opening file TMin.txt for reading!");
       return;
     }
-    T_min= file_Max.parseInt(); 
+    T_min_tmp= file_Min.parseFloat(); 
     file_Min.close();   
     //myData.sht30T_max=  T_max;
     //myData.sht30T_min=  T_min;
-    Serial.printf("#>:Read SPIFFS--T_max&min: %5.2F C, %5.2F C\r\n",T_max,T_min);
+    Serial.printf("#>:Read SPIFFS--T_max&min: %5.2F C, %5.2F C\r\n",T_max_tmp,T_min);
 
+    T_min=T_min_tmp;
+    T_max=T_max_tmp;
+
+  
+}
+
+
+void SensorValue_history_check(void){
+    float T_max_tmp,T_min_tmp;
+    //read from SPIFFS
+    if(!SPIFFS.begin())
+    {
+      Serial.println("SPIFFS Mount Failed -> skip T max min saving");
+      //SPIFFS.format();
+      //SPIFFS.begin();  
+      return;
+    }  
+  Serial.println("#>:check reading recorded T max min values...");
+  File file_Max = SPIFFS.open("/TMax.txt","r");
+  //Modus = file3.parseInt(); //get the value from Storage as an integer
+ //   File file3 = SPIFFS.open("/Modus.txt","w");
+ //parseFloat
+      if (!file_Max) 
+    {
+      Serial.println("#>:Error opening file TMax.txt for reading!");
+      return;
+    }
+    T_max_tmp= file_Max.parseFloat(); 
+
+    file_Max.close(); 
+  File file_Min = SPIFFS.open("/TMin.txt","w");
+  //Modus = file3.parseInt(); //get the value from Storage as an integer
+ //   File file3 = SPIFFS.open("/Modus.txt","w");
+ //parseFloat
+      if (!file_Min) 
+    {
+      Serial.println("#>:Error opening file TMin.txt for reading!");
+      return;
+    }
+    T_min_tmp= file_Min.parseFloat(); 
+    file_Min.close();   
+    //myData.sht30T_max=  T_max;
+    //myData.sht30T_min=  T_min;
+    Serial.printf("#>:Check SPIFFS--T_max&min: %5.2F C, %5.2F C\r\n",T_max_tmp,T_min);
+
+  
 }
