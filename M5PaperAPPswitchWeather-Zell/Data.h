@@ -1,3 +1,5 @@
+//Modified by Zell, added min max sensor values
+//data: 28.07.2023
 /*
    Copyright (C) 2021 SFini
 
@@ -41,6 +43,10 @@ public:
    int     sht30Temperatur;  //!< SHT30 temperature
    float   sht30Temp;        //!< SHT30 high res temperature
    int     sht30Humidity;    //!< SHT30 humidity
+   float   sht30T_max;
+   float   sht30T_min;
+   int     sht30H_max;
+   int     sht30H_min;
 
    time_t  moonRise;         //!< Calculated moon rise
    time_t  moonSet;          //!< Calculated moon set

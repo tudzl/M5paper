@@ -21,7 +21,7 @@
   */
 #pragma once
 
-#define VERSION          "Ver 2.2 Juli.2023"
+#define VERSION          "Ver 2.3 Juli.2023"
 #define CITY_NAME        "Hangzhou_Zell"
 
 // change to your location
@@ -35,3 +35,4 @@
 #define OPENWEATHER_PORT 80
 //#define OPENWEATHER_API  "your openweathermap api key"
 #define OPENWEATHER_API  "3eeb33b3590972773439ec2ddd2f956f"
+//https://api.openweathermap.org/data/2.5/onecall?lat=30.2937&lon=120.1614&units=metric&lang=en&exclude=minutely&appid=3eeb33b3590972773439ec2ddd2f956f

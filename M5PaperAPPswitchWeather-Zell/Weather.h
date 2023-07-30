@@ -77,25 +77,30 @@ protected:
       uri += "&lon=" + String((float) LONGITUDE, 5);
       uri += "&units=metric&lang=en&exclude=minutely";
       uri += "&appid=" + (String) OPENWEATHER_API;
-
+      Serial.printf("GetWeather at uri: %s", OPENWEATHER_SRV,String(uri));
+      Serial.printf("%s\r\n",(uri.c_str()));
       client.stop();
       http.begin(client, OPENWEATHER_SRV, OPENWEATHER_PORT, uri);
-      
+      delay(500);
       int httpCode = http.GET();
-      
+      //delay_ms(500);
+      delay(500);
       if (httpCode != HTTP_CODE_OK) {
          Serial.printf("GetWeather failed, error: %s", http.errorToString(httpCode).c_str());
          client.stop();
          http.end();
          return false;
       } else {
+         Serial.println("#>:GetWeather successful, parse Json...");
+         //// Parse response
          DeserializationError error = deserializeJson(doc, http.getStream());
-         
+         delay(50);
          if (error) {
             Serial.print(F("deserializeJson() failed: "));
             Serial.println(error.c_str());
             return false;
          } else {
+            Serial.println("#>:Data Stream Json parsed successful!");
             return true;
          }
       }
@@ -185,7 +190,8 @@ public:
    /* Start the request and the filling. */
    bool Get()
    {
-      DynamicJsonDocument doc(35 * 1024);
+      DynamicJsonDocument doc(35 * 1024);//ori
+      //DynamicJsonDocument doc(50 * 1024);
    
       if (GetOpenWeatherJsonDoc(doc)) {
          return Fill(doc.as<JsonObject>());
@@ -193,3 +199,16 @@ public:
       return false;
    }
 };
+/*
+// Send request
+http.useHTTP10(true);
+http.begin(client, "http://arduinojson.org/example.json");
+http.GET();
+
+// Parse response
+DynamicJsonDocument doc(2048);
+deserializeJson(doc, http.getStream());
+
+// Read values
+Serial.println(doc["time"].as<long>());
+*/

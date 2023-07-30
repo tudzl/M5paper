@@ -1,3 +1,6 @@
+//Modified by Zell, added min max sensor values draw function
+//data: 28.07.2023
+
 /*
    Copyright (C) 2021 SFini
 
@@ -34,7 +37,7 @@ protected:
    MyData &myData; //!< Reference to the global data
    int     maxX;   //!< Max width of the e-paper
    int     maxY;   //!< Max height of the e-paper
-
+   
 protected:
    void DrawCircle(int32_t x, int32_t y, int32_t r, uint32_t color, int32_t degFrom = 0, int32_t degTo = 360);
    void Arrow(int x, int y, int asize, float aangle, int pwidth, int plength);
@@ -55,7 +58,7 @@ protected:
    void DrawHourly(int x, int y, int dx, int dy, Weather &weather, int index);
    
    void DrawGraph(int x, int y, int dx, int dy, String title, int xMin, int xMax, int yMin, int yMax, float values[]);
-
+   void Draw_SHT_Min_Max_Info(int x, int y, int dx, int dy, int TH);
 public:
    WeatherDisplay(MyData &md, int x = 960, int y = 540)
       : myData(md)
@@ -69,6 +72,7 @@ public:
    void ShowM5PaperInfo();
    void ShowM5Paper_SHT30_Info();
    void DrawAkkuMode_Info();
+   void Show_SHT_Min_Max_Info();
 };
 
 /* Draw a circle with optional start and end point */
@@ -132,15 +136,17 @@ void WeatherDisplay::UpdateHead()
    canvas.setTextSize(2);
    canvas.setTextColor(0x0C);
    canvas.setTextColor(WHITE,BLACK);
-   canvas.drawString(bar_payload, 20, 10);
+   canvas.drawString(bar_payload, 240, 10);
+   canvas.drawString(VERSION, 20, 10);
    canvas.drawCentreString(CITY_NAME, maxX / 2, 10, 1);
    canvas.drawString(WifiGetRssiAsQuality(myData.wifiRSSI) + "%", maxX - 200, 10);
    DrawRSSI(maxX - 155, 25);
    canvas.drawString(String((int)myData.Akku_SOC) + "%", maxX - 110, 10);
    DrawBattery(maxX - 65, 10);
    Serial.println("#>pushCanvas!");
-   canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);//???
-   //delay(800);
+   //canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);//???
+   canvas.pushCanvas(0, 0, UPDATE_MODE_DU);//fast
+   delay(300);
    //M5.disableEPDPower();
    Serial.println("#>Display:UpdateHead finished!");
 }
@@ -454,6 +460,7 @@ void WeatherDisplay::Show()
    DrawMoonInfo   (232, 35, 232, 251);
    DrawWindInfo   (465, 35, 232, 251);
    DrawM5PaperInfo(697, 35, 245, 251);
+   //Draw_SHT_Min_Max_Info( 15, 35, 120, 25);
 
    canvas.drawRect(15, 286, maxX - 30, 122, M5EPD_Canvas::G15);
    for (int x = 15, i = 0; x <= 930; x += 116, i += 3) {
@@ -505,7 +512,7 @@ void WeatherDisplay::ShowM5PaperInfo()
 //by Zell , to call with total refresh mode
 void WeatherDisplay::ShowM5Paper_SHT30_Info()
 {
-   Serial.println("WeatherDisplay::ShowM5PaperInfo");
+   Serial.println("WeatherDisplay::ShowM5Paper_SHT30_Info");
    canvas.deleteCanvas();
    canvas.createCanvas(245, 251);
 
@@ -523,7 +530,7 @@ void WeatherDisplay::ShowM5Paper_SHT30_Info()
 //by Zell , to call with total refresh mode
 void WeatherDisplay::DrawAkkuMode_Info()
 {
-   Serial.println("#>:DrawAkkuModeInfo");
+   Serial.println("#>:WeatherDisplay::DrawAkkuModeInfo");
    canvas.deleteCanvas();
    canvas.createCanvas(120, 25);
 
@@ -534,4 +541,65 @@ void WeatherDisplay::DrawAkkuMode_Info()
 
    canvas.pushCanvas(697-100, 0, UPDATE_MODE_GC16);
    delay(1000);
+}
+
+
+void WeatherDisplay::Draw_SHT_Min_Max_Info(int x, int y, int dx, int dy, int TH)
+{
+
+   canvas.setTextSize(2);
+   canvas.setTextColor(WHITE, BLACK);
+   if(0==TH){
+    canvas.drawCentreString("Max:"+String(myData.sht30T_max), x + dx / 2, y , 1);
+    canvas.drawCentreString("Min:"+String(myData.sht30T_min), x + dx / 2, y+25 , 1);
+   }
+   else if(1==TH)
+   {
+    canvas.drawCentreString("Max:"+String(myData.sht30H_max)+"%", x + dx / 2, y , 1);
+    canvas.drawCentreString("Min:"+String(myData.sht30H_min)+"%", x + dx / 2, y+25 , 1);
+
+   }
+   
+
+
+}
+
+/* showthe M5Paper environment Min Max information */
+void WeatherDisplay::Show_SHT_Min_Max_Info()
+{ //   DrawSunInfo    ( 15, 35, 232, 251);
+   Serial.println("WeatherDisplay::ShowM5Paper_SHT30_Info");
+   canvas.deleteCanvas();
+   canvas.createCanvas(128, 46);
+
+
+   Draw_SHT_Min_Max_Info(0,0,128,46,0);//Temp.
+
+   //canvas.drawCentreString(String(myData.sht30T_min), x + dx / 2, y , 1);
+  //canvas.drawString(, x + 105, y + 105, 1);
+
+   //canvas.setTextSize(3);
+
+
+   //DrawIcon(x + 25, y + 55, (uint16_t *) SUNRISE64x64);
+   //canvas.drawString(getHourMinString(myData.weather.sunrise), x + 105, y + 80, 1);
+   
+   //DrawIcon(x + 25, y + 150, (uint16_t *) SUNSET64x64);
+   //canvas.drawString(getHourMinString(myData.weather.sunset), x + 105, y + 175, 1);
+
+  // DrawIcon(x + 35, y + 140, (uint16_t *) TEMPERATURE64x64);
+   //canvas.drawString(String(myData.sht30Temperatur) + " C", x + 35, y + 210, 1);
+   //canvas.drawString(String(myData.sht30T_max), x + 105, y + 105, 1);
+   //DrawIcon(x + 145, y + 140, (uint16_t *) HUMIDITY64x64);
+   //canvas.drawString(String(myData.sht30H_max) + "%", x + 105, y + 190, 1);
+   canvas.pushCanvas(80, 35 + 112, UPDATE_MODE_GC16);
+   //canvas.clear();
+   canvas.deleteCanvas();
+   canvas.createCanvas(128, 44);
+
+
+   Draw_SHT_Min_Max_Info(0,0,128,44,1) ;//hum
+   canvas.pushCanvas(80, 35 + 110+95, UPDATE_MODE_GC16);
+   delay(1000);
+
+   
 }

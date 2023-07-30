@@ -1,4 +1,9 @@
 //weather app
+//wifi issue:  GetWeather failed, error: connection refusedDateTime: 28.07.2023 19:23:34.  
+//GetWeather at uri: api.openweathermap.orgl#�?deserializeJson() failed: IncompleteInput 
+//V2.4 added saving T max T min tp SPIFFS function
+//V2.3C improved GUI
+//V2.2D improve GUI, wifi
 //V2.2 improve gui
 //V2.1 add low battery shutdown
 //touch top right area to enter akku mode with Akku_mode_selector() function
@@ -29,6 +34,11 @@ bool USB_Plug_in = false;
 int cycle_cnt = 0;
 MyData         myData;            // The collection of the global data
 WeatherDisplay myDisplay(myData); // The global display helper class
+float T_max,T_min;
+int H_max,H_min;
+void SensorValue_record(float T_cur, int H_cur );
+void SensorValue_history_read(void );
+
 
 void mode1()
 { // here you put your mode1 program
@@ -54,6 +64,9 @@ Serial.println("#>: Entering Mode 1 APP...");
   delay(600);
   //M5.disableEPDPower();//to save power
   if (StartWiFi(myData.wifiRSSI)) { //wifiRSSI !< The wifi signal strength
+    canvas.setTextColor(WHITE, BLACK);
+    canvas.drawString("#>:Wifi connected!", 70, 200);
+    canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
     Serial.println("#>:Measuring Akku Voltage ...");
     M5.BatteryADCBegin();//need this to init ADC before calling ADC sampling function
     GetBatteryValues(myData);
@@ -66,17 +79,25 @@ Serial.println("#>: Entering Mode 1 APP...");
     Serial.println("#>:Collecting sensor data ...");
     GetSHT30Values(myData);
     GetMoonValues(myData);
+    Serial.println("#>:Collecting cloud weather data ...");
     if (myData.weather.Get()) {
+      Serial.println("#>:cloud weather data collected!");
       SetRTCDateTime(myData);
     }
     M5.enableEPDPower();
     //delay(300);
     myData.Dump();
     delay(50);
-    Serial.println("#>main Display.Show!");
+    Serial.println("#>main Display.Show now!");
     myDisplay.Show();
-    delay(150);
+    delay(250);
     StopWiFi();
+  }
+  else {
+    canvas.setTextColor(WHITE, BLACK);
+    canvas.drawString("#>:Wifi N.A. ,please check!", 70, 200);
+    canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
+
   }
   //delay(500);
   if (USB_Plug_in) {
@@ -92,20 +113,24 @@ Serial.println("#>: Entering Mode 1 APP...");
     //Serial.println("#>:esp_deep_sleep_start");
     //esp_deep_sleep_start();
   }
-  Serial.printf("#>:Entering low power mode(akku mode), will wakeup every %d min.Shutdown Now...\r\n", Refresh_min_interval);
+  
   //Serial.println(Refresh_min_interval);
   gpio_hold_dis((gpio_num_t)2); // release the gpio pin to make a proper shutdown possible
   //ShutdownEPD(60 * Refresh_min_interval); // every  5/30 min   wakeup!
 
   if (myData.Akku_SOC < 40) {
+    Serial.printf("#>:Entering low Akku SOC mode, will ShutdownEPD_BAT_low() Now...\r\n");
     ShutdownEPD_BAT_low();
   }
-  else
+  else{
+    Serial.printf("#>:Entering low power mode(akku mode), will wakeup every %d min.Shutdown Now...\r\n", Refresh_min_interval);
     ShutdownEPD_BAT(60 * Refresh_min_interval); // every  5/30 min   wakeup!
-  delay(1000);
+  }
+    
+  delay(200);
   //memset(bar_payload, 0, sizeof(bar_payload));
   //sprintf(bar_payload, "LPM Failed!"); //
-  Serial.println("#>:LPM failed,Update draw Head info");
+  //Serial.println("#>:LPM failed,Update draw Head info");
   //M5.enableEPDPower();
   //myDisplay.UpdateHead(); //bugs here, stuck in push!
   Serial.println("#>:LPM failed,Entering esp_deep_sleep now... ");
@@ -117,9 +142,10 @@ Serial.println("#>: Entering Mode 1 APP...");
   delay(100);
   esp_sleep_enable_timer_wakeup(60 * Refresh_min_interval * 1000000);
   delay(100);
-  M5.disableMainPower();
-  esp_deep_sleep_start();
-  Cycle_show_M5PaperInfo(); // 30S interval to update values
+  ShutdownEPD(60 * Refresh_min_interval);
+  //M5.disableMainPower();
+  //esp_deep_sleep_start();
+  //Cycle_show_M5PaperInfo(); // 30S interval to update values
 
   //ShutdownEPD(60 * 60); // every 1 hour   wakeup!
 #else
@@ -146,6 +172,7 @@ Serial.println("#>: Entering Mode 1 APP...");
       myData.nvsCounter = 0;
     }
   }
+  SensorValue_record(myData.sht30Temp,myData.sht30Humidity);
   myData.nvsCounter++;
   myData.SaveNVS();
   ShutdownEPD(600); //RTC  10 minute  wakeup!
@@ -177,28 +204,36 @@ void  Cycle_show_M5PaperInfo()
   while (cycle_EN_USB_DC_mode) {
     M5.enableMainPower();
     M5.enableEPDPower();
-    //M5.BatteryADCBegin();//need this to init ADC before calling ADC sampling function
+    M5.BatteryADCBegin();//need this to init ADC before calling ADC sampling function
     GetBatteryValues(myData);//added 21.July.2023
     GetSHT30Values(myData);//added 21.July.2023
     myDisplay.ShowM5Paper_SHT30_Info();
     myData.Dump();
+    Serial.println("Update Min and Max Temp.&Hum values!");
+    SensorValue_record(myData.sht30Temp,myData.sht30Humidity);
+    Serial.printf("#>:--T_max&min: %5.2F C, %5.2F C\r\n",T_max,T_min);
+    Serial.printf("#>:--H_max&min: %3d %%, %3d %%\r\n",H_max,H_min);
+    myDisplay.Show_SHT_Min_Max_Info();
+    myDisplay.UpdateHead();//added v2.3B
+    delay(100);
     cycle_cnt++;
-    if (myData.batteryCapacity == 1) {
+    if (100 ==myData.Akku_SOC) {
 
-      if (3.3 == myData.batteryVolt) //if(myData.batteryVolt==3.3)
+      if (4.35 == myData.batteryVolt) //if(myData.batteryVolt==3.3)
         cycle_EN_USB_DC_mode = true;
       Serial.println("Fast cycle mode running when USB powered!");
     }
-    if (myData.Akku_SOC < 70) {
+    if (myData.Akku_SOC < 75) {
       cycle_EN_USB_DC_mode = false;
       Serial.println("#>: Low Akku (<75%), fast cycle mode exit now...");
     }
 
     Serial.println("#>:Checking Akku mode touch input...");
     //delay(1000*30); // improve
-    //M5.disableEPDPower();
-    for (int i = 0; i < Refresh_Seconds_interval_USB; i++) {
+    M5.disableEPDPower();
+    for (int i = 0; i < Refresh_Seconds_interval_USB/10; i++) {
       if (Akku_mode_selector()) {
+        M5.enableEPDPower();
         myDisplay.DrawAkkuMode_Info();
         cycle_EN_USB_DC_mode = false;
         i = Refresh_Seconds_interval_USB;
@@ -207,17 +242,123 @@ void  Cycle_show_M5PaperInfo()
       delay(100);
 
     }
-
+    M5.disableEPDPower();
     //Serial.printf("#>:Battery Vol: %3.2f V\r\n",myData.batteryVolt);
     Serial.printf("#>:Battery Raw: %3.2f V\r\n", myData.batteryVolt_raw);
     Serial.printf("APP running cycle cnt:%d\r\n", cycle_cnt);
-    //Serial.println("#>:Checking Akku mode touch input...");
-    //    if(Akku_mode_selector()){
-    //      myDisplay.DrawAkkuMode_Info();
-    //      cycle_EN_USB_DC_mode =false;
-    //Serial.println("#>:Activate Akku mode, fast cycle mode exit now...");
-    //break;
-    //    }
+
   }
+
+}
+
+void SensorValue_record(float T_cur, int H_cur ){
+     //update min max values
+    if (1==cycle_cnt){
+      
+      T_min = T_cur;
+      H_min = H_cur;
+    }
+    if (0==cycle_cnt){
+      SensorValue_history_read ();
+    }
+
+    if (T_cur > T_max)
+      T_max = T_cur;
+    if (T_cur < T_min)
+      T_min = T_cur;
+
+    if (H_cur > H_max)
+      H_max = H_cur;
+    if (H_cur < H_min)
+      H_min = H_cur;
+
+
+    //save to SPIFFS
+    if(!SPIFFS.begin())
+    {
+      Serial.println("SPIFFS Mount Failed -> skip T max min saving");
+      //SPIFFS.format();
+      //SPIFFS.begin();  
+      return;
+    }  
+  
+  File file_Max = SPIFFS.open("/TMax.txt","w");
+  //Modus = file3.parseInt(); //get the value from Storage as an integer
+ //   File file3 = SPIFFS.open("/Modus.txt","w");
+ //parseFloat
+      if (!file_Max) 
+    {
+      Serial.println("#>:Error opening file TMax.txt for writing!");
+      return;
+    }
+      if (file_Max.print(myData.sht30T_max))
+    {
+      Serial.println("- file written TMax");
+    } else {
+      Serial.println("- TMax write failed");
+    }
+    file_Max.close(); 
+  File file_Min = SPIFFS.open("/TMin.txt","w");
+  //Modus = file3.parseInt(); //get the value from Storage as an integer
+ //   File file3 = SPIFFS.open("/Modus.txt","w");
+ //parseFloat
+      if (!file_Min) 
+    {
+      Serial.println("#>:Error opening file TMin.txt for writing!");
+      return;
+    }
+      if (file_Min.print(myData.sht30T_min))
+    {
+      Serial.println("- file written TMin");
+    } else {
+      Serial.println("- TMin write failed");
+    }
+    file_Min.close();   
+    myData.sht30T_max=  T_max;
+    myData.sht30T_min=  T_min;
+    myData.sht30H_max=  H_max;
+    myData.sht30H_min=  H_min;
+
+
+}
+
+
+void SensorValue_history_read(void){
+
+    //read from SPIFFS
+    if(!SPIFFS.begin())
+    {
+      Serial.println("SPIFFS Mount Failed -> skip T max min saving");
+      //SPIFFS.format();
+      //SPIFFS.begin();  
+      return;
+    }  
+  Serial.println("#>:reading recorded T max min values...");
+  File file_Max = SPIFFS.open("/TMax.txt","r");
+  //Modus = file3.parseInt(); //get the value from Storage as an integer
+ //   File file3 = SPIFFS.open("/Modus.txt","w");
+ //parseFloat
+      if (!file_Max) 
+    {
+      Serial.println("#>:Error opening file TMax.txt for reading!");
+      return;
+    }
+    T_max= file_Max.parseInt(); 
+
+    file_Max.close(); 
+  File file_Min = SPIFFS.open("/TMin.txt","w");
+  //Modus = file3.parseInt(); //get the value from Storage as an integer
+ //   File file3 = SPIFFS.open("/Modus.txt","w");
+ //parseFloat
+      if (!file_Min) 
+    {
+      Serial.println("#>:Error opening file TMin.txt for reading!");
+      return;
+    }
+    T_min= file_Max.parseInt(); 
+    file_Min.close();   
+    //myData.sht30T_max=  T_max;
+    //myData.sht30T_min=  T_min;
+    Serial.printf("#>:Read SPIFFS--T_max&min: %5.2F C, %5.2F C\r\n",T_max,T_min);
 
 }
