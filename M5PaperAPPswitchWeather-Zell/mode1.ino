@@ -32,6 +32,7 @@
 #define Refresh_Seconds_interval_USB 30
 bool USB_Plug_in = false;
 int cycle_cnt = 0;
+uint8_t Sensor_SPIFFS_Saved = 0;
 MyData         myData;            // The collection of the global data
 WeatherDisplay myDisplay(myData); // The global display helper class
 float T_max,T_min;
@@ -201,6 +202,7 @@ SensorValue_history_check();
 void  Cycle_show_M5PaperInfo()
 {
   bool cycle_EN_USB_DC_mode = true;
+  uint8_t wt_show;
   //M5.enableEPDPower();
   while (cycle_EN_USB_DC_mode) {
     M5.enableMainPower();
@@ -212,8 +214,8 @@ void  Cycle_show_M5PaperInfo()
     myData.Dump();
     Serial.println("Update Min and Max Temp.&Hum values!");
     SensorValue_record(myData.sht30Temp,myData.sht30Humidity);
-    Serial.printf("#>:--T_max&min: %5.2F C, %5.2F C\r\n",T_max,T_min);
-    Serial.printf("#>:--H_max&min: %3d %%, %3d %%\r\n",H_max,H_min);
+    Serial.printf("#>:T_max&min: %5.2F C, %5.2F C\r\n",T_max,T_min);
+    Serial.printf("#>:H_max&min: %3d %%, %3d %%\r\n",H_max,H_min);
     myDisplay.Show_SHT_Min_Max_Info();
     myDisplay.UpdateHead();//added v2.3B
     delay(100);
@@ -232,8 +234,12 @@ void  Cycle_show_M5PaperInfo()
     Serial.println("#>:Checking Akku mode touch input...");
     //delay(1000*30); // improve
     M5.disableEPDPower();
-    for (int i = 0; i < Refresh_Seconds_interval_USB/10; i++) {
-      if (Akku_mode_selector()) {
+    for (int i = 0; i < Refresh_Seconds_interval_USB; i++) {
+      if(0== i%10)
+        wt_show = 1;
+      else  
+        wt_show = 0;
+      if (Akku_mode_selector2(wt_show)) {
         M5.enableEPDPower();
         myDisplay.DrawAkkuMode_Info();
         cycle_EN_USB_DC_mode = false;
@@ -264,7 +270,7 @@ void SensorValue_record(float T_cur, int H_cur ){
       SensorValue_history_read ();
       if (0 == T_min){
         T_min = T_cur;
-        Serial.printf("#>:0 cycle--updated SPIFFS--T_max&min: %5.2F C, %5.2F C\r\n",T_max,T_min);
+        Serial.printf("#>:0 cycle--updated SPIFFS--T_max&min: %5.2F C, %5.2F C!!\r\n",T_max,T_min);
       }
     }
 
@@ -282,7 +288,7 @@ void SensorValue_record(float T_cur, int H_cur ){
     myData.sht30H_max=  H_max;
     myData.sht30H_min=  H_min;
 
-    if( (0==cycle_cnt%6)&&(cycle_cnt>5)){
+    if( (0==cycle_cnt%2)&&(cycle_cnt>1)){
     //save to SPIFFS
         if(!SPIFFS.begin())
         {
@@ -303,11 +309,12 @@ void SensorValue_record(float T_cur, int H_cur ){
         }
           if (file_Max.print(myData.sht30T_max))
         {
-          Serial.println("- file written TMax");
+          Serial.println("---Sensor record file written:TMax---");
         } else {
           Serial.println("- TMax write failed");
         }
         file_Max.close(); 
+
         if(0!=T_min){
            File file_Min = SPIFFS.open("/TMin.txt","w");
       //Modus = file3.parseInt(); //get the value from Storage as an integer
@@ -320,14 +327,16 @@ void SensorValue_record(float T_cur, int H_cur ){
            }
           if (file_Min.print(myData.sht30T_min))
             {
-          Serial.println("- file written TMin");
+          Serial.println("----Sensor record file written: TMin---");
             } else {
-          Serial.println("- TMin write failed");
+          Serial.println("-TMin write failed-");
            }
           file_Min.close();   
         //finished saving
         //readback, debug only
          }
+        Sensor_SPIFFS_Saved = 1;
+        Serial.printf("Cycle_cnt:%d",cycle_cnt);
         SensorValue_history_check();
     }
 
@@ -359,7 +368,7 @@ void SensorValue_history_read(void){
     T_max_tmp= file_Max.parseFloat(); 
 
     file_Max.close(); 
-  File file_Min = SPIFFS.open("/TMin.txt","w");
+  File file_Min = SPIFFS.open("/TMin.txt","r");
   //Modus = file3.parseInt(); //get the value from Storage as an integer
  //   File file3 = SPIFFS.open("/Modus.txt","w");
  //parseFloat
@@ -372,7 +381,7 @@ void SensorValue_history_read(void){
     file_Min.close();   
     //myData.sht30T_max=  T_max;
     //myData.sht30T_min=  T_min;
-    Serial.printf("#>:Read SPIFFS--T_max&min: %5.2F C, %5.2F C\r\n",T_max_tmp,T_min);
+    Serial.printf("#>:Read SPIFFS--T_max&min: %5.2F C, %5.2F C\r\n",T_max_tmp,T_min_tmp);
 
     T_min=T_min_tmp;
     T_max=T_max_tmp;
@@ -404,7 +413,7 @@ void SensorValue_history_check(void){
     T_max_tmp= file_Max.parseFloat(); 
 
     file_Max.close(); 
-  File file_Min = SPIFFS.open("/TMin.txt","w");
+  File file_Min = SPIFFS.open("/TMin.txt","r");
   //Modus = file3.parseInt(); //get the value from Storage as an integer
  //   File file3 = SPIFFS.open("/Modus.txt","w");
  //parseFloat
@@ -417,7 +426,7 @@ void SensorValue_history_check(void){
     file_Min.close();   
     //myData.sht30T_max=  T_max;
     //myData.sht30T_min=  T_min;
-    Serial.printf("#>:Check SPIFFS--T_max&min: %5.2F C, %5.2F C\r\n",T_max_tmp,T_min);
+    Serial.printf("#>:Check SPIFFS--T_max&min: %5.2F C, %5.2F C\r\n",T_max_tmp,T_min_tmp);
 
   
 }

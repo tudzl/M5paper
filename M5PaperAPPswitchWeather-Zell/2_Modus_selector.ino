@@ -119,17 +119,20 @@ if(TP_Status)// check if touch driver is reachable
 bool Akku_mode_selector(void){
   bool ret = false;
   int c=1;
+  //uint8_t wt_cnt =0;
    M5.TP.flush();// reset values
    delay(10);
    M5.TP.update();
    M5.disableEPDPower();//to save power
+   Serial.println("Touch with finger to enter Akku mode!");
    while((c>0)&&(M5.TP.getFingerNum() == 0))// while no fingers are detected
   {
     delay(25);  
     M5.TP.update();
     if(c%20==0)// to go to sleep if nothing has happened after 60sec-> energysaving 
     {
-    Serial.printf("waiting ..%d\r\n",c);
+     // if(wt_cnt<21)
+         Serial.printf("waiting ..%d ",c);
     }
    
     c++;
@@ -137,34 +140,67 @@ bool Akku_mode_selector(void){
     {
       c=-1;
       Serial.println("exit waiting! Finger TP not detected..");
-      Serial.println("Touch with finger to enter Akku mode!");
-      break;
       break;
       ret = false;
       return ret;
     }
+    //wt_cnt++;
     
   }
-  
+}
+//improved to avoid excessive print of wait process
+bool Akku_mode_selector2(uint8_t wt_show){
+  bool ret = false;
+  int c=1;
+  //uint8_t wt_cnt =0;
+   M5.TP.flush();// reset values
+   delay(10);
+   M5.TP.update();
+   M5.disableEPDPower();//to save power
+   Serial.println("Touch with finger to enter Akku mode!");
+   while((c>0)&&(M5.TP.getFingerNum() == 0))// while no fingers are detected
+  {
+    delay(25);  
+    M5.TP.update();
+    if(c%20==0)// to go to sleep if nothing has happened after 60sec-> energysaving 
+    {
+      if(wt_show)
+         Serial.printf("waiting ..%d ",c);
+    }
+   
+    c++;
+    if(c>=100)// to go to sleep if nothing has happened after 60sec-> energysaving 
+    {
+      c=-1;
+      if(wt_show)
+        Serial.println("exit waiting! Finger TP not detected..");
+      break;
+      ret = false;
+      return ret;
+    }
+    //wt_cnt++;
+    
+  }
+
   if(M5.TP.available())// check if touch driver is reachable
   {  if (M5.TP.getFingerNum() >0 )// when input is received
     {
     
-    int i;
-    //int b = 15;
-    tp_finger_t FingerItem= M5.TP.readFinger(i);
-    point [i][0] = FingerItem.x;
-    point [i][1] = FingerItem.y;
-    Serial.print("Touch_X:");  
-    Serial.println(FingerItem.x);
-    Serial.print("Touch_Y:");
-    Serial.println(FingerItem.y);
-    if( (FingerItem.x>=AKKU_touch_GUI_X)&&(FingerItem.y<=AKKU_touch_GUI_Y) ){
-      Serial.print("#>: Akku mode touch trigers\r\n");
-      ret =Akku_mode_confirm();
+      int i;
+      //int b = 15;
+      tp_finger_t FingerItem= M5.TP.readFinger(i);
+      point [i][0] = FingerItem.x;
+      point [i][1] = FingerItem.y;
+      Serial.print("Touch_X:");  
+      Serial.println(FingerItem.x);
+      Serial.print("Touch_Y:");
+      Serial.println(FingerItem.y);
+      if( (FingerItem.x>=AKKU_touch_GUI_X)&&(FingerItem.y<=AKKU_touch_GUI_Y) ){
+        Serial.print("#>: Akku mode touch trigers\r\n");
+        ret =Akku_mode_confirm();
 
        
-    }
+      }
 
     
     }
